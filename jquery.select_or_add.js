@@ -10,10 +10,8 @@
       autoSelectAddedOption: true, 
       disableSelectOnAddOption: true,
       allowDuplicates: false,
-      onDuplicateFound:    function(){},
-      onAddOptionComplete: function(){},
-      onAddOptionError:    function(){},
-      onAddOptionSuccess:  function(){}
+      onDuplicateFound: $.noop,
+      onAddNewOption: $.noop
     },
 
     selectObject: null,
@@ -72,26 +70,29 @@
     runner: function(){
 
       var options = this.options;
+      var newOptionValue;
 
       if( this.selectObject.val() == this.options.addOptionValue ){
 
-        if( addOptionValue = prompt(options.addOptionPrompt, "") ){
+        if( newOptionValue = prompt(options.addOptionPrompt, "") ){
             
           if( option.disableSelectOnAddOption ) this.disableSelect();
 
-          if( this.getDuplicateOption().length > 0 ) {
-            
+          if( this.getDuplicateOption().length > 0 && options.allowDuplicates === false ) {
+
             this.enableSelect();
-
             if( options.autoSelectAddedOption === true ) this.selectAddedOption();
-
-            if( typeof options.onDuplicateFound == 'function' ) options.onDuplicateFound.call(this);
-
+            if( $.isFunction(options.onDuplicateFound) ) options.onDuplicateFound.call(this);
+          
           } else {
 
+            if( $.isFunction(options.onAddNewOption) ) options.onAddNewOption();
+
+            var addOption = $('<option />').attr('name', newOptionValue).val(newOptionValue);
+            this.selectObject.append(addOption);
 
           };
-          
+
         } else {
           this.selectOption(default_category);
         };
@@ -108,7 +109,7 @@
       if( $(this).is('select') ){
         SelectOrAdd.init(this);
       } else {
-        $.error('SelectOrAdd plugin must be bound to a selection item');
+        $.error('SelectOrAdd plugin must be bound to a dropdown');
       }
 
     });
